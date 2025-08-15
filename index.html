@@ -1,0 +1,236 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <meta name="theme-color" content="#0ea5e9" />
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="icon" href="icons/icon-512.png" sizes="512x512">
+  <title>StrideMate — Running App</title>
+  <style>
+    :root {
+      --bg:#0b0b0e;
+      --surface:#111114;
+      --muted:#a1a1aa;
+      --text:#f4f4f5;
+      --brand:#0ea5e9;
+      --ok:#22c55e;
+      --warn:#f59e0b;
+      --danger:#ef4444;
+      --card:#18181b;
+      --border:#26262b;
+    }
+    html, body {height:100%;}
+    body {
+      margin:0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Ubuntu, Cantarell, Noto Sans, Helvetica Neue, Arial, "Apple Color Emoji", "Segoe UI Emoji";
+      background: radial-gradient(1200px 800px at 70% -10%, rgba(14,165,233,.15), transparent 60%), var(--bg);
+      color: var(--text);
+    }
+    header {
+      position:sticky; top:0; z-index:5;
+      background: linear-gradient(#0b0b0e, rgba(11,11,14,.7));
+      backdrop-filter:saturate(140%) blur(6px);
+      border-bottom:1px solid var(--border);
+    }
+    .wrap { max-width: 1000px; margin: 0 auto; padding: 16px; }
+    h1 { font-size: 22px; margin: 0; display:flex; align-items:center; gap:10px;}
+    h1 img { width:28px; height:28px; border-radius:8px; }
+    nav.tabs { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+    nav.tabs button {
+      background: var(--surface); color: var(--text); border:1px solid var(--border);
+      padding:10px 14px; border-radius:10px; cursor:pointer;
+    }
+    nav.tabs button.active { background: var(--brand); border-color: transparent; }
+    main .screen { display:none; }
+    main .screen.active { display:block; }
+    .card {
+      background: linear-gradient(180deg, rgba(255,255,255,0.04), rgba(255,255,255,0.02));
+      border:1px solid var(--border); border-radius:14px; padding:16px; margin:16px 0;
+      box-shadow: 0 10px 24px rgba(0,0,0,0.25);
+    }
+    .grid { display:grid; gap:16px; }
+    @media(min-width: 800px){ .grid.cols-2 { grid-template-columns: 1fr 1fr; } }
+    label { display:block; color: var(--muted); font-size:12px; margin-bottom:6px; }
+    input, select, textarea {
+      width:100%; box-sizing:border-box; padding:12px 14px; border-radius:10px;
+      border:1px solid var(--border); background: var(--surface); color: var(--text);
+    }
+    .row { display:flex; gap:10px; align-items:center; flex-wrap:wrap; }
+    .row > * { flex:1; }
+    .btn {
+      background: var(--brand); color:#001018; border:none; border-radius:12px; padding:12px 16px;
+      font-weight:600; cursor:pointer;
+    }
+    .btn.secondary { background: var(--surface); color: var(--text); border:1px solid var(--border); }
+    .btn.danger { background: var(--danger); color: #fff; }
+    .pill { background:#0b161c; color:#9bd9ff; border:1px solid #15313f; padding:6px 8px; border-radius:20px; font-size:12px; }
+    .kpis { display:flex; gap:12px; flex-wrap:wrap; }
+    .kpi { background: var(--card); border:1px solid var(--border); border-radius:12px; padding:12px 14px; min-width:120px; }
+    .kpi .big { font-size:26px; font-weight:700; }
+    canvas { background: #0d0d12; border:1px dashed #1f1f28; border-radius:12px; width:100%; height:260px; }
+    table { width:100%; border-collapse: collapse; }
+    th, td { padding:10px; border-bottom:1px solid var(--border); text-align:left; }
+    .list { max-height: 360px; overflow:auto; }
+    .muted { color: var(--muted); }
+    footer { text-align:center; color: var(--muted); padding: 24px 0 60px; }
+    .chip { display:inline-block; padding:6px 10px; border-radius:16px; background:#14212c; color:#9bd9ff; border:1px solid #1e3b4c; font-size:12px; margin-right:8px; }
+    .warning { color: var(--warn); }
+    .success { color: var(--ok); }
+    .inline { display:inline-flex; gap:8px; align-items:center; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="wrap">
+      <h1><img src="icons/icon-512.png" alt=""> StrideMate <span class="pill">PWA</span></h1>
+      <nav class="tabs" id="tabs"></nav>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <!-- RUN SCREEN -->
+    <section class="screen active" id="screen-run">
+      <div class="card">
+        <div class="row">
+          <button class="btn" id="btn-start">Start Run</button>
+          <button class="btn secondary" id="btn-pause">Pause</button>
+          <button class="btn danger" id="btn-stop">Stop & Save</button>
+          <button class="btn secondary" id="btn-demo">Demo Run</button>
+        </div>
+        <div class="kpis">
+          <div class="kpi"><div class="muted">Time</div><div class="big" id="kpi-time">00:00</div></div>
+          <div class="kpi"><div class="muted">Distance</div><div class="big" id="kpi-distance">0.00 km</div></div>
+          <div class="kpi"><div class="muted">Pace</div><div class="big" id="kpi-pace">—</div></div>
+          <div class="kpi"><div class="muted">Splits</div><div class="big" id="kpi-splits">0</div></div>
+        </div>
+        <canvas id="mapCanvas" width="800" height="260"></canvas>
+        <div class="muted">Basic path view (no external maps). Location never leaves your device.</div>
+      </div>
+
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Splits</h3>
+          <div class="list"><table id="splits-table"><thead><tr><th>Km</th><th>Pace</th></tr></thead><tbody></tbody></table></div>
+          <div class="row">
+            <button class="btn secondary" id="btn-export-gpx">Export GPX</button>
+            <label class="inline"><input type="file" id="gpx-import" accept=".gpx"> <span class="chip">Import GPX</span></label>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Pace over Distance</h3>
+          <canvas id="paceChart" width="800" height="260"></canvas>
+        </div>
+      </div>
+    </section>
+
+    <!-- LOG SCREEN -->
+    <section class="screen" id="screen-log">
+      <div class="row">
+        <button class="btn" id="btn-new-manual">Add Manual Run</button>
+        <button class="btn secondary" id="btn-export-json">Export Log</button>
+        <label class="inline"><input type="file" id="json-import" accept=".json"> <span class="chip">Import Log</span></label>
+        <button class="btn danger" id="btn-clear-log">Clear All</button>
+      </div>
+      <div class="card list">
+        <table id="log-table">
+          <thead><tr><th>Date</th><th>Title</th><th>Distance</th><th>Time</th><th>Pace</th><th>Actions</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- INTERVALS -->
+    <section class="screen" id="screen-intervals">
+      <div class="card">
+        <h3>Interval Builder</h3>
+        <div class="grid cols-2">
+          <div>
+            <label>Warmup (min)</label><input id="iv-warmup" type="number" min="0" value="10">
+            <label>Work (min)</label><input id="iv-work" type="number" min="0" value="3">
+            <label>Rest (min)</label><input id="iv-rest" type="number" min="0" value="2">
+            <label>Repeats</label><input id="iv-reps" type="number" min="1" value="5">
+            <label>Cooldown (min)</label><input id="iv-cool" type="number" min="0" value="10">
+            <div class="row" style="margin-top:10px;">
+              <button class="btn" id="btn-intervals-start">Start Intervals</button>
+              <button class="btn secondary" id="btn-intervals-stop">Stop</button>
+            </div>
+            <div class="muted">Audio cues included. Keep the tab in foreground for reliable timers.</div>
+          </div>
+          <div>
+            <div class="kpi"><div class="muted">Status</div><div class="big" id="iv-status">Idle</div></div>
+            <div class="kpi"><div class="muted">Time Left</div><div class="big" id="iv-left">—</div></div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- TOOLS -->
+    <section class="screen" id="screen-tools">
+      <div class="grid cols-2">
+        <div class="card">
+          <h3>Pace Calculator</h3>
+          <div class="row">
+            <div><label>Distance (km)</label><input id="pc-dist" type="number" step="0.01" value="5"></div>
+            <div><label>Time (mm:ss)</label><input id="pc-time" type="text" value="25:00"></div>
+          </div>
+          <div class="row" style="margin-top:10px;">
+            <button class="btn" id="btn-calc-pace">Calculate</button>
+            <div class="kpi"><div class="muted">Pace</div><div class="big" id="pc-result">—</div></div>
+          </div>
+        </div>
+        <div class="card">
+          <h3>Race Predictor (Riegel)</h3>
+          <div class="row">
+            <div><label>Known Distance (km)</label><input id="rp-d1" type="number" step="0.01" value="5"></div>
+            <div><label>Known Time (mm:ss)</label><input id="rp-t1" type="text" value="25:00"></div>
+          </div>
+          <div class="row">
+            <div><label>Target Distance (km)</label><input id="rp-d2" type="number" step="0.01" value="21.097"></div>
+            <div class="kpi"><div class="muted">Predicted</div><div class="big" id="rp-result">—</div></div>
+          </div>
+          <button class="btn" id="btn-predict">Predict</button>
+        </div>
+        <div class="card">
+          <h3>Training Plan</h3>
+          <div class="row">
+            <div><label>Weeks</label><input id="tp-weeks" type="number" min="1" max="52" value="8"></div>
+            <div><label>Weekly Goal (km)</label><input id="tp-weekly" type="number" min="5" value="30"></div>
+          </div>
+          <button class="btn" id="btn-plan">Generate</button>
+          <div id="tp-output" class="muted" style="margin-top:8px;"></div>
+        </div>
+        <div class="card">
+          <h3>Settings</h3>
+          <label><input type="checkbox" id="opt-voice"> Voice cues</label>
+          <label><input type="checkbox" id="opt-haptics"> Haptics (if available)</label>
+          <label><input type="checkbox" id="opt-autopause"> Auto-pause on tab blur</label>
+        </div>
+      </div>
+    </section>
+
+    <!-- ABOUT -->
+    <section class="screen" id="screen-about">
+      <div class="card">
+        <h3>About StrideMate</h3>
+        <p>All data stays in your browser (localStorage). You can export/import your log anytime. Offline-ready via Service Worker.</p>
+        <ul>
+          <li>Live run tracking with geolocation</li>
+          <li>Splits, pace, and simple path visualization</li>
+          <li>Interval timer with audio/haptics</li>
+          <li>Pace calculator and race predictor</li>
+          <li>Training plan generator</li>
+          <li>GPX import/export</li>
+        </ul>
+      </div>
+    </section>
+  </main>
+
+  <footer>© 2025 StrideMate</footer>
+  <script src="app.js"></script>
+  <script>
+    if ('serviceWorker' in navigator) {
+      window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    }
+  </script>
+</body>
+</html>
