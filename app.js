@@ -187,7 +187,8 @@ function startWatch(){
     const {latitude, longitude} = pos.coords;
     addPoint(latitude, longitude, Date.now());
   }, err => {
-    console.warn(err);
+    alert('Location error: ' + err.message);
+    console.warn('Geolocation error:' , err);
   }, { enableHighAccuracy:true, maximumAge:1000, timeout:10000 });
 }
 
